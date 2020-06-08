@@ -10,34 +10,9 @@ library(fields)
 library(ggfortify)
 library(GWmodel)
 library(ape)
-
-vars<-c(1, 2)
-i=1
-j=1
-
-k=1
-template<-"../Raster/PCs/pc%d.tif"
-r_env<-list()
-for (i in vars){
-  r<-raster(sprintf(template, i))
-  r_env[[as.character(i)]]<-r
-}
-
 centers<-readRDS("../Tables/random_points_100.rda")
-plot(centers$x, centers$y)
-ratios<-seq(100, 1000, by=(1000-100)/9)
-
-ratio = ratios[10]
-i = 1
-res = 1000
-pca<-readRDS("../Models/pca_model.rda")
-#x, y, Niche_PC1, Niche_PC2, x_PC1, y_PC2, Niche_Sp_distance (ABS), r_a,r_b,  
-#Niche_Sp_distance *2/(r_a+r_b), land size %, width of square, env_heterogenity or SD,
-base<-"../Models/points/%d_%d"
-
-#result<-readRDS("../Tables/box.rda")
-i=1000
-for (i in c(1000:nrow(centers))){
+i=1
+for (i in c(1:nrow(centers))){
   f<-sprintf("../Tables/box_%d.rda", i)
   if (file.exists(f)){
     next()
@@ -143,99 +118,3 @@ for (i in c(1000:nrow(centers))){
   }
   saveRDS(result, f)
 }
-
-if (F){
-  #result<-result %>% filter(index!=20)
-  result<-readRDS("../Tables/box.rda")
-  for (i in c(20:1000)){
-    print(i)
-    sub<-result %>% filter(index==i)
-    if (nrow(sub)>0){
-      next()
-    }
-    f<-sprintf("../Tables/box_%d.rda", i)
-    if (file.exists(f)){
-      
-      sub<-readRDS(f)
-      if (is.null(sub)){
-        next()
-      }
-      sub$V2_sd<-NA
-      sub$alt_mean<-NA
-      sub$alt_sd<-NA
-      result<-bind_rows(result, sub)
-    }
-  }
-  length(unique(result$index))
-  
-  saveRDS(result, "../Tables/box.rda")
-  
-  #fill in more data, such as elevation and so on.
-  i=1
-  
-  if (F){
-    alt<-raster("../Raster/alt_eck4_1km.tif")
-    r_r<-projectRaster(alt,
-                       crs = crs(pc2))
-    writeRaster(r_r, "../Raster/alt_eck4_1km_new.tif", format="GTiff", 
-                datatypeCharacter="FLT4S", NAflag=-9999)
-    plot(r_r)
-  }
-  library(raster)
-  template<-"../Raster/PCs/pc%d.tif"
-  result<-readRDS("../Tables/box.rda")
-  setwd("/Volumes/Disk2/Experiments/abundance_and_niche/abundance_and_niche")
-  pc1<-raster(sprintf(template, 1))
-  pc2<-raster(sprintf(template, 2))
-  r_r<-raster("../Raster/alt_eck4_1km_new.tif")
-  ratios<-seq(100, 1000, by=(1000-100)/9)
-  #for (i in unique(result$index)){
-  for (i in rev(c(1000:1000))){
-    for (ratio in ratios){
-      print(paste(i, ratio))
-      points<-readRDS(sprintf("../Models/points/%d_%d/points.rda", ratio, i))
-      if ("pc1" %in% colnames(points)){
-        print("skip")
-        next()
-      }
-      points$pc1<-extract(pc1, points[, c("x", "y")])
-      points$pc2<-extract(pc2, points[, c("x", "y")])
-      points$alt<-extract(r_r, points[, c("x", "y")])
-      saveRDS(points, sprintf("../Models/points/%d_%d/points.rda", ratio, i))
-    }
-  }
-}
-
-if (F){
-  
-  result<-as.data.frame(readRDS("../Tables/box.rda"))
-  i=500
-  for (i in c(1:nrow(result))){
-    print(paste(i, nrow(result)))
-    sub<-result[i,]
-    
-    if (!is.na(sub$V2_sd)){
-      next()
-    }
-    
-    points<-readRDS(sprintf("../Models/points/%d_%d/points.rda", sub$semi_ra, sub$index))
-    if ("pc1" %in% colnames(points)){
-      points_no_NA<-points[complete.cases(points),]
-      result[i, ]$V2_sd<-sd(points_no_NA$pc2)
-      result[i, ]$alt_mean<-mean(points_no_NA$alt)
-      result[i, ]$alt_sd<-sd(points_no_NA$alt)
-    }
-  }
-  result<-as_tibble(result)
-  finished<-result %>% filter(!is.na(result$V2_sd))
-  
-  length(unique((finished$index)))
-  saveRDS(result, "../Tables/box_100_up.rda")
-}
-
-r1<-readRDS("../Tables/box_100_up.rda")
-r2<-readRDS("../Tables/box_90.rda")
-
-r<-bind_rows(r1, r2)
-
-saveRDS(r, "../Tables/box.rda")
