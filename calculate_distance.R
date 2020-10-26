@@ -23,22 +23,38 @@ for (i in vars){
   r_env[[as.character(i)]]<-r
 }
 
-centers<-readRDS("../Tables/random_points_100.rda")
-plot(centers$x, centers$y)
-ratios<-seq(100, 1000, by=(1000-100)/9)
+#Filted something
+first_round<-readRDS("../Tables/box_with_mh_dist.rda")
+my_thd=0.90#  
+first_round <- subset(first_round,width<=1001)   #
+NUM_width <- length(first_round$width[first_round$index==1])
+#There are 29 different width
+freq1 <- data.frame(table(first_round$index[first_round$land_percentile>=my_thd]))
+good_case <- as.character(freq1$Var1[freq1$Freq==NUM_width])
+print(length(good_case))
+#first_round$index
+dd <- subset(first_round, index %in% good_case)
+labels<-paste(dd$x, dd$y)
 
+centers<-readRDS("../Tables/random_points_100.rda")
+centers$index<-c(1:nrow(centers))
+#centers<-subset(centers, index %in% good_case)     
+
+#plot(centers$x, centers$y)
+ratios<-seq(100, 500, by=100)
+ratios<-c(seq(10, 90, by=10), ratios)
 ratio = ratios[10]
 i = 1
 res = 1000
-pca<-readRDS("../Models/pca_model.rda")
+#pca<-readRDS("../Models/pca_model.rda")
 #x, y, Niche_PC1, Niche_PC2, x_PC1, y_PC2, Niche_Sp_distance (ABS), r_a,r_b,  
 #Niche_Sp_distance *2/(r_a+r_b), land size %, width of square, env_heterogenity or SD,
 base<-"../Models/points/%d_%d"
-
+r_r<-raster("../Raster/alt_eck4_1km_new.tif")
 #result<-readRDS("../Tables/box.rda")
-i=1000
-for (i in c(1000:nrow(centers))){
-  f<-sprintf("../Tables/box_%d.rda", i)
+i=1
+for (i in c(1:nrow(centers))){
+  f<-sprintf("../Tables/boxes/box_%d.rda", i)
   if (file.exists(f)){
     next()
   }
@@ -66,9 +82,13 @@ for (i in c(1000:nrow(centers))){
       print(paste("ratio:", ratio, i, nrow(centers), "Var:", j, sep="/"))
       points[, sprintf("V_%d", j)]<-extract(r_env[[as.character(j)]], points[, c("x", "y")])
     }
+    points$alt<-extract(r_r, points[, c("x", "y")])
     saveRDS(points, sprintf("%s/points.rda", folder))
     points_no_NA<-points[complete.cases(points),]
     size_continent<-nrow(points_no_NA)
+    if (size_continent<=3){
+      next()
+    }
     mve<-cov_center(data = points_no_NA, mve = T, 
                     level = 0.95, vars = 3:4)
     saveRDS(mve, sprintf("%s/mve.rda", folder))
@@ -122,8 +142,8 @@ for (i in c(1000:nrow(centers))){
     diag(dists.inv) <- 0
     
     #dists.inv[1:sample_size, 1:sample_size]
-    center$V1_sd<-sd(points$V_1, na.rm=T)
-    center$V2_sd<-sd(points$V_2, na.rm=T)
+    center$V1_sd<-sd(points_no_NA$V_1, na.rm=T)
+    center$V2_sd<-sd(points_no_NA$V_2, na.rm=T)
     
     m<-Moran.I(points_sample$V_1, dists.inv, na.rm = TRUE)
     center$M_V1_ovserved<-m$observed
@@ -135,6 +155,14 @@ for (i in c(1000:nrow(centers))){
     center$M_V2_expected<-m$expected
     center$M_V2_M_sd<-m$sd
     center$M_V2_p.value<-m$p.value
+    
+    center$alt_mean<-mean(points_no_NA$alt)
+    center$alt_sd<-sd(points_no_NA$alt)
+    
+    center$mh_dist <- stats::mahalanobis(center[, c("PC_1", "PC_2")], center = mve$centroid, 
+                                          cov = mve$covariance)
+    center$qchisq<-stats::qchisq(0.95, length(mve$centroid))
+    
     if (is.null(result)){
       result<-center
     }else{
@@ -145,97 +173,26 @@ for (i in c(1000:nrow(centers))){
 }
 
 if (F){
-  #result<-result %>% filter(index!=20)
-  result<-readRDS("../Tables/box.rda")
-  for (i in c(20:1000)){
+  result<-NULL
+  for (i in c(1:nrow(centers))){
     print(i)
-    sub<-result %>% filter(index==i)
-    if (nrow(sub)>0){
+    f<-sprintf("../Tables/boxes/box_%d.rda", i)
+    if (!file.exists(f)){
       next()
     }
-    f<-sprintf("../Tables/box_%d.rda", i)
-    if (file.exists(f)){
-      
-      sub<-readRDS(f)
-      if (is.null(sub)){
-        next()
-      }
-      sub$V2_sd<-NA
-      sub$alt_mean<-NA
-      sub$alt_sd<-NA
-      result<-bind_rows(result, sub)
+    item<-readRDS(f)
+    if (is.null(item)){
+      next()
+    }
+    if (is.null(result)){
+      result<-item
+    }else{
+      result<-bind_rows(result, item)
     }
   }
-  length(unique(result$index))
-  
   saveRDS(result, "../Tables/box.rda")
-  
-  #fill in more data, such as elevation and so on.
-  i=1
-  
-  if (F){
-    alt<-raster("../Raster/alt_eck4_1km.tif")
-    r_r<-projectRaster(alt,
-                       crs = crs(pc2))
-    writeRaster(r_r, "../Raster/alt_eck4_1km_new.tif", format="GTiff", 
-                datatypeCharacter="FLT4S", NAflag=-9999)
-    plot(r_r)
-  }
-  library(raster)
-  template<-"../Raster/PCs/pc%d.tif"
-  result<-readRDS("../Tables/box.rda")
-  setwd("/Volumes/Disk2/Experiments/abundance_and_niche/abundance_and_niche")
-  pc1<-raster(sprintf(template, 1))
-  pc2<-raster(sprintf(template, 2))
-  r_r<-raster("../Raster/alt_eck4_1km_new.tif")
-  ratios<-seq(100, 1000, by=(1000-100)/9)
-  #for (i in unique(result$index)){
-  for (i in rev(c(1000:1000))){
-    for (ratio in ratios){
-      print(paste(i, ratio))
-      points<-readRDS(sprintf("../Models/points/%d_%d/points.rda", ratio, i))
-      if ("pc1" %in% colnames(points)){
-        print("skip")
-        next()
-      }
-      points$pc1<-extract(pc1, points[, c("x", "y")])
-      points$pc2<-extract(pc2, points[, c("x", "y")])
-      points$alt<-extract(r_r, points[, c("x", "y")])
-      saveRDS(points, sprintf("../Models/points/%d_%d/points.rda", ratio, i))
-    }
-  }
 }
 
-if (F){
-  
-  result<-as.data.frame(readRDS("../Tables/box.rda"))
-  i=500
-  for (i in c(1:nrow(result))){
-    print(paste(i, nrow(result)))
-    sub<-result[i,]
-    
-    if (!is.na(sub$V2_sd)){
-      next()
-    }
-    
-    points<-readRDS(sprintf("../Models/points/%d_%d/points.rda", sub$semi_ra, sub$index))
-    if ("pc1" %in% colnames(points)){
-      points_no_NA<-points[complete.cases(points),]
-      result[i, ]$V2_sd<-sd(points_no_NA$pc2)
-      result[i, ]$alt_mean<-mean(points_no_NA$alt)
-      result[i, ]$alt_sd<-sd(points_no_NA$alt)
-    }
-  }
-  result<-as_tibble(result)
-  finished<-result %>% filter(!is.na(result$V2_sd))
-  
-  length(unique((finished$index)))
-  saveRDS(result, "../Tables/box_100_up.rda")
-}
-
-r1<-readRDS("../Tables/box_100_up.rda")
-r2<-readRDS("../Tables/box_90.rda")
-
-r<-bind_rows(r1, r2)
-
-saveRDS(r, "../Tables/box.rda")
+ddd<-subset(result, index %in% good_case)
+length(unique(ddd$index))
+plot(ddd$relavent_dist, ddd$mh_dist)

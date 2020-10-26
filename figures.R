@@ -40,7 +40,7 @@ NDquntil <- function(nD, level) {
 
 
 fit <- cov.rob(points_no_NA[, c("pc1", "pc2")], quantile.used=NDquntil(nrow(points_no_NA), 0.95),  method = "mve")
-best_ellipse <- ellipsoidhull( as.matrix(points_no_NA[fit$best, c("pc1", "pc2")] ))
+best_ellipse <- ellipsoidhull(as.matrix(points_no_NA[fit$best, c("pc1", "pc2")] ))
 plot(points$pc1, points$pc2, pch=".")
 lines(predict(best_ellipse), col="blue")
 points(df[1, "PC_1"], df[1, "PC_2"], col="red")
