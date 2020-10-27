@@ -1,6 +1,7 @@
 library(ggplot2)
 library(dplyr)
-df<-readRDS("C:/Users/Huijie Qiao/Downloads/Tables/box.rda")
+setwd("/Volumes/Disk2/Experiments/abundance_and_niche/abundance_and_niche")
+df<-readRDS("../Tables/box.rda")
 ggplot(df) + geom_point(aes(x=width, y=relavent_dist, color=factor(index))) + 
   geom_line(aes(x=width, y=relavent_dist, color=factor(index)))+
   geom_smooth(aes(x=width, y=relavent_dist), method = lm)
