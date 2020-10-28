@@ -174,7 +174,7 @@ df_box_se<-df_box%>%dplyr::group_by(semi_ra)%>%
 p<-ggplot(df_box, aes(x=semi_ra, y=mh_dist))+geom_point()+geom_smooth()+ylim(0, 10)+theme_bw()
 ggsave(p, file="../Figures/radius_mh_dist.png")
 p<-ggplot(df_box, aes(x=alt_sd, y=mh_dist))+geom_point()+geom_smooth()+ylim(0, 10)+theme_bw()
-
+ggsave(p, file="../Figures/alt_sd_mh_dist.png")
 
 
 
