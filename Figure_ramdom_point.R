@@ -167,4 +167,14 @@ points(center$PC_1, center$PC_2, pch=2)
 points(center$Niche_PC1, center$Niche_PC2, pch=1, col="red")
 
 dev.off()
+library(ggplot2)
+library(dplyr)
+df_box_se<-df_box%>%dplyr::group_by(semi_ra)%>%
+  dplyr::summarise()
+p<-ggplot(df_box, aes(x=semi_ra, y=mh_dist))+geom_point()+geom_smooth()+ylim(0, 10)+theme_bw()
+ggsave(p, file="../Figures/radius_mh_dist.png")
+p<-ggplot(df_box, aes(x=alt_sd, y=mh_dist))+geom_point()+geom_smooth()+ylim(0, 10)+theme_bw()
+
+
+
 
