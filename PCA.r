@@ -61,4 +61,5 @@ for (i in c(1:19)){
 endCluster()
 
 pc1<-raster("../Raster/PCs/pc1.tif")
+
 pc2<-raster("../Raster/PCs/pc2.tif")
