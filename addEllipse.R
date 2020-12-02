@@ -121,10 +121,10 @@ addEllipse <- function(mu, sigma, m = NULL, n = 100, p.interval = NULL ,
   
   ML.ellipse = t(apply(cc,1, back.trans))
   
-  if(grDevices::dev.cur() > 1 & do.plot) {graphics::lines(ML.ellipse, ...)}
+  #if(grDevices::dev.cur() > 1 & do.plot) {graphics::lines(ML.ellipse, ...)}
   
   # optional return of x and y coordinates of the plotted ellipse
-  #return(ML.ellipse)
+  return(ML.ellipse)
   
 }
 
