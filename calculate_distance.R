@@ -23,20 +23,8 @@ for (i in vars){
   r_env[[as.character(i)]]<-r
 }
 
-#Filted something
-first_round<-readRDS("../Tables/box_with_mh_dist.rda")
-my_thd=0.90#  
-first_round <- subset(first_round,width<=1001)   #
-NUM_width <- length(first_round$width[first_round$index==1])
-#There are 29 different width
-freq1 <- data.frame(table(first_round$index[first_round$land_percentile>=my_thd]))
-good_case <- as.character(freq1$Var1[freq1$Freq==NUM_width])
-print(length(good_case))
-#first_round$index
-dd <- subset(first_round, index %in% good_case)
-labels<-paste(dd$x, dd$y)
 
-centers<-readRDS("../Tables/random_points_100.rda")
+centers<-readRDS("../Tables/random_points_1000_0.8.rda")
 centers$index<-c(1:nrow(centers))
 #centers<-subset(centers, index %in% good_case)     
 
@@ -111,12 +99,12 @@ for (i in c(1:nrow(centers))){
     #                           level = 0.95),
     #            alpha=0.4,col="blue")
     
-    distance<-points %>% mutate(dist = sqrt((V_1-mve$centroid[1])^2 + 
-                                              (V_2-mve$centroid[2])^2))
-    r<-raster(matrix(distance$dist, nrow=sqrt(size)), crs=crs(r_env[[as.character(1)]]))
-    NAvalue(r)<--9999
-    extent(r)<-c(min(distance$x)-500, max(distance$x)+500, min(distance$y)-500, max(distance$y)+500)
-    writeRaster(r, sprintf("%s/distribution.tif", folder), overwrite=T, NAflag=-9999)
+    #distance<-points %>% mutate(dist = sqrt((V_1-mve$centroid[1])^2 + 
+    #                                          (V_2-mve$centroid[2])^2))
+    #r<-raster(matrix(distance$dist, nrow=sqrt(size)), crs=crs(r_env[[as.character(1)]]))
+    #NAvalue(r)<--9999
+    #extent(r)<-c(min(distance$x)-500, max(distance$x)+500, min(distance$y)-500, max(distance$y)+500)
+    #writeRaster(r, sprintf("%s/distribution.tif", folder), overwrite=T, NAflag=-9999)
     #raster(sprintf("%s/distribution.tif", folder))
     #saveRDS(r, sprintf("%s/r.rda", folder))
     #rr<-readRDS(sprintf("%s/r.rda", folder))
@@ -171,19 +159,21 @@ for (i in c(1:nrow(centers))){
   }
   saveRDS(result, f)
 }
+asdfasf
+
 
 if (F){
   result<-NULL
   for (i in c(1:nrow(centers))){
     print(i)
     f<-sprintf("../Tables/boxes/box_%d.rda", i)
-    if (!file.exists(f)){
-      next()
-    }
+    #if (!file.exists(f)){
+    #  next()
+    #}
     item<-readRDS(f)
-    if (is.null(item)){
-      next()
-    }
+    #if (is.null(item)){
+    #  next()
+    #}
     if (is.null(result)){
       result<-item
     }else{
@@ -193,6 +183,7 @@ if (F){
   saveRDS(result, "../Tables/box.rda")
 }
 
+hist(result$land_percentile)
 ddd<-subset(result, index %in% good_case)
 length(unique(ddd$index))
 plot(ddd$relavent_dist, ddd$mh_dist)

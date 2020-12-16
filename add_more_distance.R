@@ -2,7 +2,7 @@ setwd("/Volumes/Disk2/Experiments/abundance_and_niche/abundance_and_niche")
 library(dplyr)
 library(Rmisc)
 library(mixtools)
-df<-readRDS("../Tables/box.rda")
+df<-readRDS("../Tables/box_with_mh_dist.rda")
 
 df<-as.data.frame(df)
 i=925

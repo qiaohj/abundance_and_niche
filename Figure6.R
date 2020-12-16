@@ -10,7 +10,7 @@ library(ggpmisc)
 
 setwd("/Volumes/Disk2/Experiments/abundance_and_niche/abundance_and_niche")
 #center points
-p_sub<-readRDS("../Tables/random_points_100.rda")
+p_sub<-readRDS("../Tables/random_points_1000_0.8.rda")
 if (F){
   mask<-raster("../Raster/alt_eck4_1km_new.tif")
   mask_low<-mask
@@ -41,12 +41,25 @@ map_theme<-theme(
 
 
 
-ratio = 200
+ratio = 400
 res = 1000
-df_box<-readRDS("../Tables/box.rda")
+df_box<-readRDS("../Tables/box_with_more_dist.rda")
+df_box<-df_box%>%dplyr::filter(land_percentile>=0.8)
+df_box<-df_box%>%dplyr::filter(df_box$semi_ra>10)
+df_box$xxx<-df_box$centers_n_in_centers_g/(df_box$centers_n_in_centers_g+df_box$centers_n_out_centers_g)
 
-filter_df_box<-df_box%>%dplyr::filter((semi_ra==ratio)&((alt_sd>=1812)|(alt_sd<=14.3)))
-filter_df_box<-df_box%>%dplyr::filter((semi_ra==ratio)&((relavent_dist>=2.545176976)|(relavent_dist<=0.006527766)))
+
+
+filter_df_box_1<-df_box%>%dplyr::filter((semi_ra==ratio)&(xxx>=0.5)&(land_percentile==1))
+df_box$dist_ttt<-sqrt((df_box$x-filter_df_box_1[3, "x"])^2+
+                        (df_box$y-filter_df_box_1[3, "y"])^2)
+
+filter_df_box_2<-df_box%>%dplyr::filter((semi_ra==ratio)&((xxx<=0.05)&(dist_ttt<=2e6)))
+filter_df_box<-rbind(filter_df_box_1[3,], filter_df_box_2[7,])
+hist(filter_df_box_2$dist_ttt)
+hist(df_box$xxx)
+
+#View(df_box[which(df_box$index==906),])
 
 range(df_box[which(df_box$semi_ra==ratio), ]$relavent_dist, na.rm = T)
 
@@ -62,14 +75,19 @@ p<-ggplot()+geom_tile(data=p_mask, aes(x=x, y=y, fill=v), alpha=0.4)+
   geom_point(data=p_sub, aes(x=x, y=y), color="lightblue",size=0.5)+
   map_theme
 
+ggsave(p, file="../Figures/Figure6/Fig.6.0.pdf", width=6, height=4)
+ggsave(p, file="../Figures/Figure6/Fig.6.0.png", width=6, height=4)
+
+
 p<-p+geom_path(data=lines1, aes(x=x, y=y))+
   geom_point(data=center1, aes(x=x, y=y), color="red", size=0.5)+
-  geom_text(data=center1, aes(x=x, y=y, label="(2)"), vjust=2)
+  geom_text(data=center1, aes(x=x, y=y, label="(1)"), vjust=2)
 
 
 p<-p+geom_path(data=lines2, aes(x=x, y=y))+
   geom_point(data=center2, aes(x=x, y=y), color="red", size=0.5)+
-  geom_text(data=center2, aes(x=x, y=y, label="(1)"), vjust=2)
+  geom_text(data=center2, aes(x=x, y=y, label="(2)"), vjust=2)
+
 p
 
 vars<-c(1, 2)
@@ -149,9 +167,62 @@ p_g_item[[2]]
 p_n_item[[1]]
 p_n_item[[2]]
 
-box_more<-readRDS("../Tables/box_with_more_dist.rda")
+parr_1<-ggarrange(p_g_item[[1]], p_n_item[[1]], nrow=1, ncol=2)
+parr_2<-ggarrange(p_g_item[[2]], p_n_item[[2]], nrow=1, ncol=2)
+parr_g_2<-ggarrange(parr_1, parr_2, nrow=2, ncol=1, labels=c("(1)", "(2)"))
+#p<-p+xlim(-7.5e6, -2.5e6)+
+#  ylim(-6e6, -2e4)
+parr_g_full<-ggarrange(p, parr_g_2, nrow=2, ncol=1, heights=c(10, 12))
+ggsave(parr_g_full, file="../Figures/Figure6/Fig.6.1.pdf", width=6, height=8)
+ggsave(parr_g_full, file="../Figures/Figure6/Fig.6.1.png", width=6, height=8)
 
-p3<-ggplot(box_more%>%dplyr::filter(box_more$centers_g_2_centers_n_mean<25))+
+
+
+hist(df_box$centers_g_2_centers_n_mean)
+
+df_box$xxx<-df_box$centers_n_in_centers_g/(df_box$centers_n_in_centers_g+df_box$centers_n_out_centers_g)
+df_box$yyy<-df_box$centers_g_in_centers_n/(df_box$centers_g_in_centers_n
+                                               +df_box$centers_g_out_centers_n)
+
+
+p<-ggplot(df_box)+geom_density(aes(x=xxx, color=factor(semi_ra)))+theme_bw()+
+  xlab("")+facet_wrap(~semi_ra)
+
+p<-ggplot(df_box)+
+  #geom_histogram(aes(x=xxx, y=..density.., fill=factor(semi_ra)), bins=10)+
+  geom_density(aes(x=xxx, y = ..density.., color=factor(semi_ra)), bw = 0.02) +  
+  theme_bw()+
+  xlab("")
+
+ggsave(p, filename="../Figures/Figure6/Fig.6.1.1.png", width=7, height=4)
+
+p<-ggplot(df_box)+
+  #geom_histogram(aes(x=xxx, y=..density.., fill=factor(semi_ra)), bins=10)+
+  geom_density(aes(x=yyy, y = ..density.., color=factor(semi_ra)), bw = 0.02) +  
+  theme_bw()+
+  xlab("")
+
+ggsave(p, filename="../Figures/Figure6/Fig.6.1.2.png", width=7, height=4)
+
+p
+
+ggplot(df_box)+geom_histogram(aes(x=yyy))+
+  facet_wrap(~semi_ra, scale="free")
+
+cor(df_box$xxx, df_box$yyy)
+
+ggplot(df_box)+geom_histogram(aes(x=centers_n_2_centers_g_mean))+
+  facet_wrap(~semi_ra, scale="free")
+
+ggplot(df_box)+geom_histogram(aes(x=centers_g_2_centers_n_mean))+
+  facet_wrap(~semi_ra, scale="free")
+
+df_box_f<-df_box%>%dplyr::filter(index %in% df_box[which(df_box$semi_ra==500), "index"])
+table(df_box_raw$semi_ra)
+table(df_box$semi_ra)
+table(df_box_f$semi_ra)
+
+p3<-ggplot(df_box)+
   geom_point(aes(x=centers_g_2_centers_n_mean, 
                  y=centers_n_2_centers_g_mean/1000, 
                  color=factor(semi_ra)), size=0.5)+
@@ -173,16 +244,151 @@ p3<-ggplot(box_more%>%dplyr::filter(box_more$centers_g_2_centers_n_mean<25))+
   theme_bw()
 ggsave(p3, file="../Figures/Figure6/Fig.6.2.png", width=8, height=5)
 
-parr_1<-ggarrange(p_g_item[[1]], p_n_item[[1]], nrow=1, ncol=2)
-parr_2<-ggarrange(p_g_item[[2]], p_n_item[[2]], nrow=1, ncol=2)
-parr_g_2<-ggarrange(parr_1, parr_2, nrow=2, ncol=1, labels=c("(1)", "(2)"))
-parr_g_full<-ggarrange(p, parr_g_2, nrow=2, ncol=1, heights=c(10, 12))
-ggsave(parr_g_full, file="../Figures/Figure6/Fig.6.1.pdf", width=6, height=8)
-ggsave(parr_g_full, file="../Figures/Figure6/Fig.6.1.png", width=6, height=8)
+hist(df_box$land_percentile)
+p4<-ggplot(df_box)+
+  geom_point(aes(x=M_V1_ovserved, 
+                 y=centers_n_2_centers_g_mean/1000, 
+                 color=factor(semi_ra)), size=0.5)+
+  stat_smooth(aes(x=M_V1_ovserved, 
+                  y=centers_n_2_centers_g_mean/1000),
+              method="lm")+
+  stat_poly_eq(aes(x=M_V1_ovserved, 
+                   y=centers_n_2_centers_g_mean/1000,
+                   label = paste(..eq.label.., 
+                                 ..rr.label.., 
+                                 ..p.value.label.., 
+                                 sep = "~~~")),
+               formula = y ~ x, 
+               parse = TRUE)+
+  
+  xlab("Moran's I autocorrelation index of PC1")+
+  ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
+  labs(color = "Radius (km)")+
+  theme_bw()+
+  facet_wrap(~semi_ra, scale="free")
+ggsave(p4, file="../Figures/Figure6/Fig.6.2.pc1.png", width=15, height=12)
+
+lm_eqn <- function(m){
+  intercept<-as.numeric(coef(m)[1])
+  a<-as.numeric(coef(m)[2])
+  b<-as.numeric(coef(m)[3])
+  f <- summary(m)$fstatistic
+  p <- pf(f[1],f[2],f[3],lower.tail=F)
+  eq <- substitute(italic(temp) == a + b %.% italic(alt)+ c %.% italic(y)*","~~italic(r)^2~"="~r2, 
+                   list(a = format(unname(coef(m)[1]), digits = 2),
+                        b = format(unname(coef(m)[2]), digits = 2),
+                        c = format(unname(coef(m)[3]), digits = 2),
+                        r2 = format(summary(m)$r.squared, digits = 3)))
+  return(data.frame(intercept=intercept,
+                    a=a,
+                    b=b,
+                    p=p,
+                    r=summary(m)$r.squared)
+  )
+  
+}
+
+df_box$n2g_scale<-df_box$centers_n_2_centers_g_mean/(df_box$width*sqrt(2))
+lm_m<-lm(data=df_box, n2g_scale ~ M_V1_ovserved+width)
+
+info<-lm_eqn(lm_m)
+grid.lines = 30
+M_V1_ovserved.pred <- seq(min(df_box$M_V1_ovserved), 
+                          max(df_box$M_V1_ovserved), 
+                          length.out = grid.lines)
+width.pred <- seq(min(df_box$width), 
+                    max(df_box$width), 
+                    length.out = grid.lines)
+xy <- expand.grid(M_V1_ovserved = M_V1_ovserved.pred, 
+                  width = width.pred)
+dist.pred <- matrix(predict(lm_m, newdata = xy), 
+                    nrow = grid.lines, ncol = grid.lines)
+
+library("plot3D")
+
+png(filename="../Figures/Figure6/lm_n2g.png", width=1000, height=1000)
+
+scatter3D(df_box$M_V1_ovserved, 
+          df_box$width,
+          df_box$n2g_scale, pch = 18, cex = 0.5, 
+          theta = 60, phi = 20, ticktype = "detailed",
+          xlab = "Moran’s I of PC1", ylab = "Width", zlab = "Center E to Center G",
+          surf = list(x = M_V1_ovserved.pred, y = width.pred, z = dist.pred,  
+                      facets = NA), 
+          main = sprintf("Intercept=%.3f, a=%.3f, b=%.3f, r2=%.3f, p-value=%.3f",
+                         info$intercept,
+                         info$a,
+                         info$b,
+                         info$r,
+                         info$p))
+
+dev.off()
+
+#df_box_1<-df_box%>%dplyr::filter(centers_g_2_centers_n_mean<=qchisq)
+df_box_1<-df_box
+lm_m<-lm(data=df_box_1, centers_g_2_centers_n_mean ~ M_V1_ovserved+width)
+summary(lm_m)
+info<-lm_eqn(lm_m)
+grid.lines = 30
+M_V1_ovserved.pred <- seq(min(df_box_1$M_V1_ovserved), 
+                          max(df_box_1$M_V1_ovserved), 
+                          length.out = grid.lines)
+width.pred <- seq(min(df_box_1$width), 
+                  max(df_box_1$width), 
+                  length.out = grid.lines)
+xy <- expand.grid(M_V1_ovserved = M_V1_ovserved.pred, 
+                  width = width.pred)
+dist.pred <- matrix(predict(lm_m, newdata = xy), 
+                    nrow = grid.lines, ncol = grid.lines)
 
 
 
-p3<-ggplot(box_more%>%dplyr::filter(box_more$centers_g_2_centers_n_mean<25))+
+png(filename="../Figures/Figure6/lm_g2n.png", width=1000, height=1000)
+
+scatter3D(df_box_1$M_V1_ovserved, 
+          df_box_1$width,
+          df_box_1$centers_g_2_centers_n_mean, pch = 18, cex = 0.5, 
+          theta = 60, phi = 20, ticktype = "detailed",
+          xlab = "Moran’s I of PC1", ylab = "Width", zlab = "Center G to Center N",
+          surf = list(x = M_V1_ovserved.pred, y = width.pred, z = dist.pred,  
+                      facets = NA), 
+          main = sprintf("Intercept=%.3f, a=%.3f, b=%.3f, r2=%.3f, p=%.3f",
+                         info$intercept,
+                         info$a,
+                         info$b,
+                         info$r,
+                         info$p))
+
+dev.off()
+
+p5<-ggplot(df_box)+
+  geom_point(aes(x=M_V2_ovserved, 
+                 y=centers_n_2_centers_g_mean/1000, 
+                 color=factor(semi_ra)), size=0.5)+
+  stat_smooth(aes(x=M_V2_ovserved, 
+                  y=centers_n_2_centers_g_mean/1000),
+              method="lm")+
+  stat_poly_eq(aes(x=M_V2_ovserved, 
+                   y=centers_n_2_centers_g_mean/1000,
+                   label = paste(..eq.label.., 
+                                 ..rr.label.., 
+                                 ..p.value.label.., 
+                                 sep = "~~~")),
+               formula = y ~ x, 
+               parse = TRUE)+
+  
+  xlab("Moran's I autocorrelation index of PC2")+
+  ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
+  labs(color = "Radius (km)")+
+  theme_bw()+
+  facet_wrap(~semi_ra, scale="free")
+ggsave(p5, file="../Figures/Figure6/Fig.6.2.pc2.png", width=15, height=12)
+df_box[which(df_box$M_V1_ovserved==max(df_box$M_V1_ovserved)),]
+
+
+
+
+p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
   geom_point(aes(x=alt_sd, 
                  y=centers_n_2_centers_g_mean/1000, 
                  color=factor(semi_ra)), size=0.5)+
@@ -204,7 +410,7 @@ p3<-ggplot(box_more%>%dplyr::filter(box_more$centers_g_2_centers_n_mean<25))+
 
 ggsave(p3, file="../Figures/Figure6/Fig.6.3.png", width=8, height=5)
 
-p3<-ggplot(box_more%>%dplyr::filter(box_more$centers_g_2_centers_n_mean<25))+
+p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
   geom_point(aes(x=alt_sd, 
                  y=centers_n_2_centers_g_mean/1000, 
                  color=factor(semi_ra)), size=0.5)+
@@ -219,7 +425,7 @@ p3<-ggplot(box_more%>%dplyr::filter(box_more$centers_g_2_centers_n_mean<25))+
 
 ggsave(p3, file="../Figures/Figure6/Fig.6.3.2.png", width=8, height=5)
 
-p3<-ggplot(box_more%>%dplyr::filter(box_more$centers_g_2_centers_n_mean<25))+
+p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
   geom_point(aes(x=alt_sd, 
                  y=centers_n_2_centers_g_mean/1000, 
                  color=factor(semi_ra)), size=0.5)+
@@ -243,7 +449,7 @@ p3<-ggplot(box_more%>%dplyr::filter(box_more$centers_g_2_centers_n_mean<25))+
 ggsave(p3, file="../Figures/Figure6/Fig.6.3.3.png", width=12, height=12)
 
 
-p3<-ggplot(box_more%>%dplyr::filter(box_more$centers_g_2_centers_n_mean<25))+
+p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
   geom_point(aes(x=alt_sd, 
                  y=centers_g_2_centers_n_mean, 
                  color=factor(semi_ra)), size=0.5)+
@@ -267,10 +473,10 @@ p3<-ggplot(box_more%>%dplyr::filter(box_more$centers_g_2_centers_n_mean<25))+
 ggsave(p3, file="../Figures/Figure6/Fig.6.4.png", width=8, height=5)
 
 
-box_more$jaccard<-box_more$centers_g_in_centers_n/
-  (box_more$centers_n_out_centers_g+box_more$centers_g_out_centers_n+box_more$centers_g_in_centers_n)
-range(box_more$jaccard)
-p3<-ggplot(box_more%>%dplyr::filter(box_more$centers_g_2_centers_n_mean<25))+
+df_box$jaccard<-df_box$centers_g_in_centers_n/
+  (df_box$centers_n_out_centers_g+df_box$centers_g_out_centers_n+df_box$centers_g_in_centers_n)
+range(df_box$jaccard)
+p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
   geom_point(aes(x=semi_ra, 
                  y=jaccard))+
   stat_smooth(aes(x=semi_ra, 
@@ -290,11 +496,11 @@ p3<-ggplot(box_more%>%dplyr::filter(box_more$centers_g_2_centers_n_mean<25))+
 ggsave(p3, file="../Figures/Figure6/Fig.6.5.png", width=8, height=5)
 
 
-box_more_se<-box_more%>%dplyr::group_by(semi_ra)%>%
+df_box_se<-df_box%>%dplyr::group_by(semi_ra)%>%
   dplyr::summarise(mean_jaccard=mean(jaccard),
                    sd_jaccard=sd(jaccard),
                    CI_jaccard=CI(jaccard)[1]-CI(jaccard)[2])
-p3<-ggplot(box_more_se)+
+p3<-ggplot(df_box_se)+
   geom_point(aes(x=factor(semi_ra), 
                  y=mean_jaccard))+
   geom_errorbar(aes(x=factor(semi_ra), 
