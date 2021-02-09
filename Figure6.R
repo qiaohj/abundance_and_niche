@@ -244,29 +244,6 @@ p3<-ggplot(df_box)+
   theme_bw()
 ggsave(p3, file="../Figures/Figure6/Fig.6.2.png", width=8, height=5)
 
-hist(df_box$land_percentile)
-p4<-ggplot(df_box)+
-  geom_point(aes(x=M_V1_ovserved, 
-                 y=centers_n_2_centers_g_mean/1000, 
-                 color=factor(semi_ra)), size=0.5)+
-  stat_smooth(aes(x=M_V1_ovserved, 
-                  y=centers_n_2_centers_g_mean/1000),
-              method="lm")+
-  stat_poly_eq(aes(x=M_V1_ovserved, 
-                   y=centers_n_2_centers_g_mean/1000,
-                   label = paste(..eq.label.., 
-                                 ..rr.label.., 
-                                 ..p.value.label.., 
-                                 sep = "~~~")),
-               formula = y ~ x, 
-               parse = TRUE)+
-  
-  xlab("Moran's I autocorrelation index of PC1")+
-  ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
-  labs(color = "Radius (km)")+
-  theme_bw()+
-  facet_wrap(~semi_ra, scale="free")
-ggsave(p4, file="../Figures/Figure6/Fig.6.2.pc1.png", width=15, height=12)
 
 lm_eqn <- function(m){
   intercept<-as.numeric(coef(m)[1])
@@ -287,18 +264,17 @@ lm_eqn <- function(m){
   )
   
 }
-
 df_box$n2g_scale<-df_box$centers_n_2_centers_g_mean/(df_box$width*sqrt(2))
 lm_m<-lm(data=df_box, n2g_scale ~ M_V1_ovserved+width)
-
+summary(lm_m)
 info<-lm_eqn(lm_m)
 grid.lines = 30
 M_V1_ovserved.pred <- seq(min(df_box$M_V1_ovserved), 
                           max(df_box$M_V1_ovserved), 
                           length.out = grid.lines)
 width.pred <- seq(min(df_box$width), 
-                    max(df_box$width), 
-                    length.out = grid.lines)
+                  max(df_box$width), 
+                  length.out = grid.lines)
 xy <- expand.grid(M_V1_ovserved = M_V1_ovserved.pred, 
                   width = width.pred)
 dist.pred <- matrix(predict(lm_m, newdata = xy), 
@@ -326,7 +302,10 @@ dev.off()
 
 #df_box_1<-df_box%>%dplyr::filter(centers_g_2_centers_n_mean<=qchisq)
 df_box_1<-df_box
-lm_m<-lm(data=df_box_1, centers_g_2_centers_n_mean ~ M_V1_ovserved+width)
+lm_m2<-lm(data=df_box, log(centers_g_2_centers_n_mean) ~ M_V1_ovserved)
+summary(lm_m2)
+
+lm_m<-lm(data=df_box, log(centers_g_2_centers_n_mean) ~ M_V1_ovserved+width)
 summary(lm_m)
 info<-lm_eqn(lm_m)
 grid.lines = 30
@@ -360,6 +339,43 @@ scatter3D(df_box_1$M_V1_ovserved,
                          info$p))
 
 dev.off()
+
+ggplot(df_box%>%dplyr::filter(semi_ra==200))+
+  geom_point(aes(x=n2g_scale, y=M_V1_ovserved))
+
+ggplot(df_box%>%dplyr::filter(semi_ra==200))+
+  geom_point(aes(x=centers_g_2_centers_n_mean, y=M_V1_ovserved))
+
+ggplot(df_box)+
+  geom_point(aes(x=semi_ra, y=M_V1_ovserved))
+
+cor(df_box$semi_ra, df_box$M_V1_ovserved)
+
+hist(df_box$land_percentile)
+p4<-ggplot(df_box)+
+  geom_point(aes(x=M_V1_ovserved, 
+                 y=centers_n_2_centers_g_mean/1000, 
+                 color=factor(semi_ra)), size=0.5)+
+  stat_smooth(aes(x=M_V1_ovserved, 
+                  y=centers_n_2_centers_g_mean/1000),
+              method="lm")+
+  stat_poly_eq(aes(x=M_V1_ovserved, 
+                   y=centers_n_2_centers_g_mean/1000,
+                   label = paste(..eq.label.., 
+                                 ..rr.label.., 
+                                 ..p.value.label.., 
+                                 sep = "~~~")),
+               formula = y ~ x, 
+               parse = TRUE)+
+  
+  xlab("Moran's I autocorrelation index of PC1")+
+  ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
+  labs(color = "Radius (km)")+
+  theme_bw()+
+  facet_wrap(~semi_ra, scale="free")
+ggsave(p4, file="../Figures/Figure6/Fig.6.2.pc1.png", width=15, height=12)
+
+
 
 p5<-ggplot(df_box)+
   geom_point(aes(x=M_V2_ovserved, 
