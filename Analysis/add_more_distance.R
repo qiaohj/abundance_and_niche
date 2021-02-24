@@ -26,7 +26,7 @@ df$centers_n_out_centers_g<-NA
 
 df$centers_g_in_centers_n<-NA
 df$centers_g_out_centers_n<-NA
-
+i=10
 for (i in c(1:nrow(df))){
   print(paste(i, nrow(df)))
   item<-df[i,]
@@ -58,15 +58,28 @@ for (i in c(1:nrow(df))){
   df[i, ]$centers_n_2_centers_g_ci <- CI(centers_n$g_dist_g_center)[1] - CI(centers_n$g_dist_g_center)[2]
   df[i, ]$centers_n_ci <- CI(centers_n$mh_dist)[1] - CI(centers_n$mh_dist)[2]
   
-  df[i, ]$centers_n_in_centers_g<-nrow(centers_n%>%dplyr::filter(centers_n$g_dist_g_center<=threshold_g))
-  df[i, ]$centers_n_out_centers_g<-nrow(centers_n%>%dplyr::filter(centers_n$g_dist_g_center>threshold_g))
+  df[i, ]$centers_n_in_centers_g<-nrow(centers_n%>%dplyr::filter(g_dist_g_center<=threshold_g))
+  df[i, ]$centers_n_out_centers_g<-nrow(centers_n%>%dplyr::filter(g_dist_g_center>threshold_g))
   
-  df[i, ]$centers_g_in_centers_n<-nrow(centers_g%>%dplyr::filter(centers_g$mh_dist<=threshold_n))
-  df[i, ]$centers_g_out_centers_n<-nrow(centers_g%>%dplyr::filter(centers_g$mh_dist>threshold_n))
+  df[i, ]$centers_g_in_centers_n<-nrow(centers_g%>%dplyr::filter(mh_dist<=threshold_n))
+  df[i, ]$centers_g_out_centers_n<-nrow(centers_g%>%dplyr::filter(mh_dist>threshold_n))
   
   if (F){
-    plot(points$x, points$y)
-    points(item$x, item$y, col="red")
+    ggplot()+
+      geom_point(data=points, aes(x=x, y=y), color="grey50", alpha=0.1)+
+      geom_point(data=centers_g, aes(x=x, y=y))+
+      geom_point(data=centers_n, aes(x=x, y=y, color="red"))+
+      geom_point(data=centers_n%>%dplyr::filter(g_dist_g_center<=threshold_g),
+                 aes(x=x, y=y), color="green")
+    
+    ggplot()+
+      geom_point(data=points, aes(x=V_1, y=V_2), color="grey50", alpha=0.1)+
+      geom_point(data=centers_n, aes(x=V_1, y=V_2, color="red"))+
+      geom_point(data=centers_g, aes(x=V_1, y=V_2))+
+      geom_point(data=centers_g%>%dplyr::filter(mh_dist<=threshold_n),
+                 aes(x=V_1, y=V_2), color="green")
+    
+    
   }
 }
 
