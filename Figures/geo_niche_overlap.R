@@ -8,31 +8,32 @@ df_box$xxx<-df_box$centers_n_in_centers_g/
 df_box$yyy<-df_box$centers_g_in_centers_n/
   (df_box$centers_g_in_centers_n+df_box$centers_g_out_centers_n)
 #plot(df_box$xxx<-df_box$centers_n_in_centers_g, df_box$xxx<-df_box$centers_n_in_centers_n)
-
+#df_box<-df_box%>%dplyr::filter(semi_ra %in% c(30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500))
 p<-ggplot(df_box)+geom_density(aes(x=xxx, color=factor(semi_ra)))+theme_bw()+
   xlab("")+facet_wrap(~semi_ra)
-binwidth<-0.05
+binwidth<-0.1
 p1<-ggplot(df_box)+
-  geom_histogram(aes(x=xxx, fill=factor(semi_ra)), bins=20)+
+  geom_histogram(aes(x=xxx, fill=factor(width)), bins=20)+
   geom_density(aes(x=xxx, y = ..density..* nrow(df_box) * binwidth, 
-                   color=factor(semi_ra)), bw = binwidth) +  
+                   color=factor(width)), bw = binwidth) +  
   scale_x_sqrt(breaks=seq(0, 0.9, 0.1)^2)+
   theme_bw()+
   ylab("Count")+
   xlab("Overlap of spatial space center and environmental centroid (square root transform)")+
-  labs(color="radius", fill="radius")
+  labs(color="width", fill="width")
 p1
 #ggsave(p, filename="../Figures/Figure6/Fig.6.1.1.png", width=7, height=4)
 
 p2<-ggplot(df_box)+
-  geom_histogram(aes(x=yyy, fill=factor(semi_ra)), bins=20)+
+  #geom_histogram(aes(x=yyy, fill=factor(width)), bins=20)+
   geom_density(aes(x=yyy, y = ..density..* nrow(df_box) * binwidth, 
-                   color=factor(semi_ra)), bw = binwidth) +  
+                   color=factor(width)), bw = binwidth) +  
   #scale_x_sqrt(breaks=seq(0, 0.9, 0.1)^2)+
+  scale_x_continuous(breaks=seq(0, 0.9, 0.1), labels = paste(seq(0, 0.9, 0.1)*100, "%"))+
   ylab("Count")+
   theme_bw()+
   xlab("Overlap of spatial space center and environmental centroid")+
-  labs(color="radius", fill="radius")+
+  labs(color="width", fill="width")+
   theme(axis.title.y = element_blank())
 p2
 leg<-get_legend(p1)
@@ -41,11 +42,73 @@ p
 ggsave(p2, filename="../Figures/overlap/overlap.combined.png", width=7, height=5)
 ggsave(p2, filename="../Figures/overlap/overlap.combined.pdf", width=7, height=5)
 
-p
+p_x<-ggplot(df_box)+
+  geom_histogram(aes(x=centers_g_2_centers_n_mean, fill=factor(width)), bins=50)+
+  labs(fill="width", x="Mahalanobis distance of spatial center to niche center in environmental space", y="Count")+
+  scale_x_sqrt(breaks=seq(0, 6, 1)^2)+
+  theme_bw()
+
+p_x_facet<-ggplot(df_box)+
+  geom_histogram(aes(x=centers_g_2_centers_n_mean, fill=factor(width)), bins=50)+
+  labs(fill="width", x="Mahalanobis distance of spatial center to niche center in environmental space", y="Count")+
+  scale_x_sqrt(breaks=seq(0, 6, 1)^2)+
+  theme_bw()+
+  facet_wrap(~width)
+p_x_facet
+ggsave(p_x_facet, filename="../Figures/overlap/distance_in_n_facet.png", width=10, height=7)
+
+
+p_y<-ggplot(df_box)+
+  geom_histogram(aes(x=centers_n_2_centers_g_mean/1000, fill=factor(width)), bins=50)+
+  labs(fill="width", x="Mean Euclidean distance of spatial center to niche center in spatial space (KM)", y="Count")+
+  scale_x_sqrt(breaks=seq(0, 25, 5)^2)+
+  theme_bw()
+p_y
+p_y_facet<-ggplot(df_box)+
+  geom_histogram(aes(x=centers_n_2_centers_g_mean/1000, fill=factor(width)), bins=50)+
+  labs(fill="width", x="Mean Euclidean distance of spatial center to niche center in spatial space (KM)", y="Count")+
+  scale_x_sqrt(breaks=seq(0, 25, 5)^2)+
+  theme_bw()+
+  facet_wrap(~width)
+p_y_facet
+ggsave(p_y_facet, filename="../Figures/overlap/distance_in_g_facet.png", width=10, height=7)
+
+df_box$n2g_scale<-as.vector(df_box$centers_n_2_centers_g_mean/(df_box$width*sqrt(2))/1000)
+p_y2<-ggplot(df_box)+
+  geom_histogram(aes(x=n2g_scale, fill=factor(width)), bins=50)+
+  labs(fill="width", 
+       x="scaled mean Euclidean distance of spatial center to niche center in spatial space", y="Count")+
+  #scale_x_sqrt(breaks=seq(0, 25, 5)^2)+
+  theme_bw()
+p_y2_facet<-ggplot(df_box)+
+  geom_histogram(aes(x=n2g_scale, fill=factor(width)), bins=50)+
+  labs(fill="width", 
+       x="scaled mean Euclidean distance of spatial center to niche center in spatial space", y="Count")+
+  #scale_x_sqrt(breaks=seq(0, 25, 5)^2)+
+  theme_bw()+
+  facet_wrap(~width)
+p_y2_facet
+ggsave(p_y2_facet, filename="../Figures/overlap/distance_in_g_facet_scaled.png", width=10, height=7)
+
+
+leg<-get_legend(p_x)
+pp<-ggarrange(p_x, p_y, nrow=2, ncol=1, common.legend = T, legend = "right", legend.grob = leg)
+ggsave(pp, filename="../Figures/overlap/histgram.combined.png", width=7, height=7)
+ggsave(pp, filename="../Figures/overlap/histgram.combined.pdf", width=7, height=7)
+
+pp<-ggarrange( p_y, p_y2, p_x, p2, nrow=2, ncol=2, 
+               common.legend = T, legend = "right", legend.grob = leg)
+ggsave(pp, filename="../Figures/overlap/histgram.combined_all.png", width=13, height=7)
+ggsave(pp, filename="../Figures/overlap/histgram.combined_all.pdf", width=13, height=7)
+
+
 df_box$cuts<-">10% and <50%"
 df_box[which(df_box$yyy<=0.1), "cuts"]<-"<=10%"
 df_box[which(df_box$yyy>=0.5), "cuts"]<-">=50%"
 table(df_box$cuts)
+df_box$yyy_count<-floor(df_box$yyy * 10)
+data.frame(table(df_box$yyy_count))
+
 ggplot(df_box)+geom_histogram(aes(x=yyy))+
   facet_wrap(~semi_ra, scale="free")
 
@@ -65,7 +128,7 @@ table(df_box_f$semi_ra)
 p3<-ggplot(df_box)+
   geom_point(aes(x=centers_g_2_centers_n_mean, 
                  y=centers_n_2_centers_g_mean/1000, 
-                 color=factor(semi_ra)), size=0.5)+
+                 color=factor(width)), size=0.5)+
   stat_smooth(aes(x=centers_g_2_centers_n_mean, 
                   y=centers_n_2_centers_g_mean/1000),
               method="lm")+
@@ -80,9 +143,11 @@ p3<-ggplot(df_box)+
   xlim(c(0, 25))+
   xlab("Mean Mahalanobis distance of spatial center to niche center in environmental space")+
   ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
-  labs(color = "Radius (km)")+
+  labs(color = "width")+
   theme_bw()
-ggsave(p3, file="../Figures/Figure6/Fig.6.2.png", width=8, height=5)
+p3
+ggsave(p3, file="../Figures/overlap/lm_distance.png", width=8, height=5)
+ggsave(p3, file="../Figures/overlap/lm_distance.pdf", width=8, height=5)
 
 
 lm_eqn <- function(m){
@@ -104,38 +169,46 @@ lm_eqn <- function(m){
   )
   
 }
-df_box$n2g_scale<-df_box$centers_n_2_centers_g_mean/(df_box$width*sqrt(2))
-lm_m<-lm(data=df_box, n2g_scale ~ M_V1_ovserved+width)
-summary(lm_m)
+df_box$n2g_scale<-as.vector(df_box$centers_n_2_centers_g_mean/(df_box$width*sqrt(2))/1000)
+#df_box$n2g_scale<-scale(df_box$centers_n_2_centers_g_mean)
+df_box$m_scale<-as.vector(base::scale(df_box$M_V1_ovserved, center=T, scale=T))
+df_box$width_scale<-as.vector(scale(df_box$width))
+
+lm_m1<-lm(data=df_box, n2g_scale ~ m_scale+width_scale)
+summary(lm_m1)
+
+lm_m1_2<-lm(data=df_box, n2g_scale ~ m_scale)
+summary(lm_m1_2)
+
 df_box$g2n_scale<-df_box$centers_g_2_centers_n_mean/(df_box$width*sqrt(2))
-lm_m<-lm(data=df_box, g2n_scale ~ M_V1_ovserved+width)
-summary(lm_m)
+#df_box$g2n_scale<-scale(df_box$centers_g_2_centers_n_mean)
+lm_m2<-lm(data=df_box, centers_g_2_centers_n_mean ~ m_scale+width_scale)
+summary(lm_m2)
 
 cor(df_box$width, df_box$M_V1_ovserved)
-summary(lm_m)
-info<-lm_eqn(lm_m)
+info<-lm_eqn(lm_m2)
 grid.lines = 30
-M_V1_ovserved.pred <- seq(min(df_box$M_V1_ovserved), 
-                          max(df_box$M_V1_ovserved), 
+m_scale.pred <- seq(min(df_box$m_scale), 
+                          max(df_box$m_scale), 
                           length.out = grid.lines)
-width.pred <- seq(min(df_box$width), 
-                  max(df_box$width), 
+width_scale.pred <- seq(min(df_box$width_scale), 
+                  max(df_box$width_scale), 
                   length.out = grid.lines)
-xy <- expand.grid(M_V1_ovserved = M_V1_ovserved.pred, 
-                  width = width.pred)
-dist.pred <- matrix(predict(lm_m, newdata = xy), 
+xy <- expand.grid(m_scale = m_scale.pred, 
+                  width_scale = width_scale.pred)
+dist.pred <- matrix(predict(lm_m2, newdata = xy), 
                     nrow = grid.lines, ncol = grid.lines)
 
 library("plot3D")
 
-png(filename="../Figures/Figure6/lm_n2g.png", width=1000, height=1000)
+png(filename="../Figures/overlap/lm_n2g.png", width=1000, height=1000)
 
-scatter3D(df_box$M_V1_ovserved, 
-          df_box$width,
-          df_box$n2g_scale, pch = 18, cex = 0.5, 
+scatter3D(df_box$m_scale, 
+          df_box$width_scale,
+          df_box$centers_g_2_centers_n_mean, pch = 18, cex = 0.5, 
           theta = 60, phi = 20, ticktype = "detailed",
-          xlab = "Moran’s I of PC1", ylab = "Width", zlab = "Center E to Center G",
-          surf = list(x = M_V1_ovserved.pred, y = width.pred, z = dist.pred,  
+          xlab = "scaled Moran’s I of PC1", ylab = "scaled width", zlab = "Center E to Center G",
+          surf = list(x = m_scale.pred, y = width_scale.pred, z = dist.pred,  
                       facets = NA), 
           main = sprintf("Intercept=%.3f, a=%.3f, b=%.3f, r2=%.3f, p-value=%.3f",
                          info$intercept,
@@ -148,34 +221,22 @@ dev.off()
 
 #df_box_1<-df_box%>%dplyr::filter(centers_g_2_centers_n_mean<=qchisq)
 df_box_1<-df_box
-lm_m2<-lm(data=df_box, log(centers_g_2_centers_n_mean) ~ M_V1_ovserved)
-summary(lm_m2)
-
-lm_m<-lm(data=df_box, log(centers_g_2_centers_n_mean) ~ M_V1_ovserved+width)
-summary(lm_m)
-info<-lm_eqn(lm_m)
+info<-lm_eqn(lm_m1)
 grid.lines = 30
-M_V1_ovserved.pred <- seq(min(df_box_1$M_V1_ovserved), 
-                          max(df_box_1$M_V1_ovserved), 
-                          length.out = grid.lines)
-width.pred <- seq(min(df_box_1$width), 
-                  max(df_box_1$width), 
-                  length.out = grid.lines)
-xy <- expand.grid(M_V1_ovserved = M_V1_ovserved.pred, 
-                  width = width.pred)
-dist.pred <- matrix(predict(lm_m, newdata = xy), 
+
+dist.pred <- matrix(predict(lm_m1, newdata = xy), 
                     nrow = grid.lines, ncol = grid.lines)
 
+library(plot3D)
 
+png(filename="../Figures/overlap/lm_g2n.png", width=1000, height=1000)
 
-png(filename="../Figures/Figure6/lm_g2n.png", width=1000, height=1000)
-
-scatter3D(df_box_1$M_V1_ovserved, 
-          df_box_1$width,
-          df_box_1$centers_g_2_centers_n_mean, pch = 18, cex = 0.5, 
+scatter3D(df_box_1$m_scale, 
+          df_box_1$width_scale,
+          df_box_1$n2g_scale, pch = 18, cex = 1, 
           theta = 60, phi = 20, ticktype = "detailed",
-          xlab = "Moran’s I of PC1", ylab = "Width", zlab = "Center G to Center N",
-          surf = list(x = M_V1_ovserved.pred, y = width.pred, z = dist.pred,  
+          xlab = "scaled Moran’s I of PC1", ylab = "scaled width", zlab = "scaled Center G to Center N",
+          surf = list(x = m_scale.pred, y = width_scale.pred, z = dist.pred,  
                       facets = NA), 
           main = sprintf("Intercept=%.3f, a=%.3f, b=%.3f, r2=%.3f, p=%.3f",
                          info$intercept,
@@ -201,7 +262,7 @@ hist(df_box$land_percentile)
 p4<-ggplot(df_box)+
   geom_point(aes(x=M_V1_ovserved, 
                  y=centers_n_2_centers_g_mean/1000, 
-                 color=factor(semi_ra)), size=0.5)+
+                 color=factor(width)), size=0.5)+
   stat_smooth(aes(x=M_V1_ovserved, 
                   y=centers_n_2_centers_g_mean/1000),
               method="lm")+
@@ -216,17 +277,17 @@ p4<-ggplot(df_box)+
   
   xlab("Moran's I autocorrelation index of PC1")+
   ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
-  labs(color = "Radius (km)")+
+  labs(color = "width")+
   theme_bw()+
   facet_wrap(~semi_ra, scale="free")
-ggsave(p4, file="../Figures/Figure6/Fig.6.2.pc1.png", width=15, height=12)
+ggsave(p4, file="../Figures/overlap/lm.pc1.png", width=15, height=12)
 
 
 
 p5<-ggplot(df_box)+
   geom_point(aes(x=M_V2_ovserved, 
                  y=centers_n_2_centers_g_mean/1000, 
-                 color=factor(semi_ra)), size=0.5)+
+                 color=factor(width)), size=0.5)+
   stat_smooth(aes(x=M_V2_ovserved, 
                   y=centers_n_2_centers_g_mean/1000),
               method="lm")+
@@ -241,10 +302,10 @@ p5<-ggplot(df_box)+
   
   xlab("Moran's I autocorrelation index of PC2")+
   ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
-  labs(color = "Radius (km)")+
+  labs(color = "width")+
   theme_bw()+
   facet_wrap(~semi_ra, scale="free")
-ggsave(p5, file="../Figures/Figure6/Fig.6.2.pc2.png", width=15, height=12)
+ggsave(p5, file="../Figures/overlap/lm.pc2.png", width=15, height=12)
 df_box[which(df_box$M_V1_ovserved==max(df_box$M_V1_ovserved)),]
 
 
@@ -253,7 +314,7 @@ df_box[which(df_box$M_V1_ovserved==max(df_box$M_V1_ovserved)),]
 p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
   geom_point(aes(x=alt_sd, 
                  y=centers_n_2_centers_g_mean/1000, 
-                 color=factor(semi_ra)), size=0.5)+
+                 color=factor(width)), size=0.5)+
   stat_smooth(aes(x=alt_sd, 
                   y=centers_n_2_centers_g_mean/1000),
               method="lm")+
@@ -267,30 +328,30 @@ p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
                parse = TRUE)+
   xlab("Standard deviation of elevation")+
   ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
-  labs(color = "Radius (km)")+
+  labs(color = "width")+
   theme_bw()
 
-ggsave(p3, file="../Figures/Figure6/Fig.6.3.png", width=8, height=5)
+ggsave(p3, file="../Figures/overlap/elevation_lm.png", width=8, height=5)
 
 p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
   geom_point(aes(x=alt_sd, 
                  y=centers_n_2_centers_g_mean/1000, 
-                 color=factor(semi_ra)), size=0.5)+
+                 color=factor(width)), size=0.5)+
   stat_smooth(aes(x=alt_sd, 
                   y=centers_n_2_centers_g_mean/1000,
-                  color=factor(semi_ra)),
+                  color=factor(width)),
               method="lm")+
   xlab("Standard deviation of elevation")+
   ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
-  labs(color = "Radius (km)")+
+  labs(color = "width")+
   theme_bw()
 
-ggsave(p3, file="../Figures/Figure6/Fig.6.3.2.png", width=8, height=5)
+ggsave(p3, file="../Figures/overlap/elevation_lm_group.png", width=8, height=5)
 
 p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
   geom_point(aes(x=alt_sd, 
                  y=centers_n_2_centers_g_mean/1000, 
-                 color=factor(semi_ra)), size=0.5)+
+                 color=factor(width)), size=0.5)+
   stat_smooth(method="lm", 
               aes(x=alt_sd, 
                   y=centers_n_2_centers_g_mean/1000))+
@@ -304,17 +365,17 @@ p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
                parse = TRUE)+
   xlab("Standard deviation of elevation")+
   ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
-  labs(color = "Radius (km)")+
+  labs(color = "width")+
   theme_bw()+
   facet_wrap(~semi_ra, ncol=3, scale="free")
 
-ggsave(p3, file="../Figures/Figure6/Fig.6.3.3.png", width=12, height=12)
+ggsave(p3, file="../Figures/overlap/elevation_lm_part.png", width=12, height=12)
 
 
 p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
   geom_point(aes(x=alt_sd, 
                  y=centers_g_2_centers_n_mean, 
-                 color=factor(semi_ra)), size=0.5)+
+                 color=factor(width)), size=0.5)+
   xlab("Standard deviation of elevation")+
   ylab("Mean Mahalanobis distance of spatial center to niche center in environmental space")+
   stat_smooth(aes(x=alt_sd, 
@@ -329,10 +390,10 @@ p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
                formula = y ~ x, 
                parse = TRUE)+
   ylim(c(0, 25))+
-  labs(color = "Radius (km)")+
+  labs(color = "width")+
   theme_bw()
 
-ggsave(p3, file="../Figures/Figure6/Fig.6.4.png", width=8, height=5)
+ggsave(p3, file="../Figures/overlap/elevation_g2n_group.png", width=8, height=5)
 
 
 df_box$jaccard<-df_box$centers_g_in_centers_n/

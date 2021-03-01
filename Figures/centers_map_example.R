@@ -87,8 +87,10 @@ p<-p+geom_path(data=lines2, aes(x=x, y=y), color="black")+
   geom_text(data=center2, aes(x=x, y=y, label="(2)"), color="black", vjust=2.5)
 
 p
-ggsave(p, file="../Figures/center_map_example/center_map_example_top.pdf", width=12, height=6)
-ggsave(p, file="../Figures/center_map_example/center_map_example_top.png", width=12, height=6)
+if (F){
+  ggsave(p, file="../Figures/center_map_example/center_map_example_top.pdf", width=12, height=6)
+  ggsave(p, file="../Figures/center_map_example/center_map_example_top.png", width=12, height=6)
+}
 
 vars<-c(1, 2)
 template<-"../Raster/PCs/pc%d.tif"
@@ -162,19 +164,22 @@ for (index in c(1:2)){
   p_n_item[[index]]<-p2
   
 }
-p_g_item[[1]]
-p_g_item[[2]]
-p_n_item[[1]]
-p_n_item[[2]]
-
+if (F){
+  p_g_item[[1]]
+  p_g_item[[2]]
+  p_n_item[[1]]
+  p_n_item[[2]]
+}
 parr_1<-ggarrange(p_g_item[[1]], p_n_item[[1]], nrow=1, ncol=2)
 parr_2<-ggarrange(p_g_item[[2]], p_n_item[[2]], nrow=1, ncol=2)
 parr_g_2<-ggarrange(parr_1, parr_2, nrow=2, ncol=1)
 #p<-p+xlim(-7.5e6, -2.5e6)+
 #  ylim(-6e6, -2e4)
 parr_g_full<-ggarrange(p, parr_g_2, nrow=2, ncol=1, heights=c(10, 12))
-ggsave(parr_g_full, file="../Figures/center_map_example/center_map_example.png", 
-       width=8, height=8)
-ggsave(parr_g_full, file="../Figures/center_map_example/center_map_example.pdf", 
-       width=8, height=8)
+if (F){
+  ggsave(parr_g_full, file="../Figures/center_map_example/center_map_example.png", 
+         width=8, height=8)
+  ggsave(parr_g_full, file="../Figures/center_map_example/center_map_example.pdf", 
+         width=8, height=8)
+}
 
