@@ -22,7 +22,7 @@ if (F){
 mask<-raster("../Raster/alt_eck4_50km.tif")
 p_mask<-data.frame(rasterToPoints(mask))
 colnames(p_mask)[3]<-"v"
-map_background<-"#f5f5f2"
+map_background<-"white"
 map_theme<-theme(
   axis.line = element_blank(),
   axis.text.x = element_blank(),
@@ -114,9 +114,9 @@ for (index in c(1:2)){
   
   
   for (j in vars){
-    center[, sprintf("PC_%d", j)]<-extract(r_env[[as.character(j)]], center[, c("x", "y")])
+    center[, sprintf("PC_%d", j)]<-raster::extract(r_env[[as.character(j)]], center[, c("x", "y")])
     print(paste("ratio:", ratio, i, nrow(centers), "Var:", j, sep="/"))
-    points[, sprintf("V_%d", j)]<-extract(r_env[[as.character(j)]], points[, c("x", "y")])
+    points[, sprintf("V_%d", j)]<-raster::extract(r_env[[as.character(j)]], points[, c("x", "y")])
   }
   
   points_no_NA<-points[complete.cases(points),]
@@ -136,7 +136,7 @@ for (index in c(1:2)){
   centers_n<-points_no_NA%>%dplyr::filter(mh_dist<=threshold_n)
   
   r_r<-raster("../Raster/alt_eck4_1km_new.tif")
-  points_no_NA$alt<-extract(r_r, points_no_NA[, c("x", "y")])
+  points_no_NA$alt<-raster::extract(r_r, points_no_NA[, c("x", "y")])
   
   
   
@@ -156,7 +156,8 @@ for (index in c(1:2)){
   p_g_item[[index]]<-p1
   lines<-data.frame(addEllipse(mve$center, mve$cov, col="red", p.interval=0.95))
   p2<-ggplot()+
-    geom_point(data=points_no_NA, aes(x=V_1, y=V_2), color=map_background, alpha=0.4, size=0.3)+
+    geom_point(data=points_no_NA[sample(nrow(points_no_NA), 1000), ], 
+               aes(x=V_1, y=V_2), color="black", alpha=0.4, size=0.3)+
     geom_path(data=lines, aes(x=X1, y=X2), color="red")+
     geom_point(data=centers_g, aes(x=V_1, y=V_2), color="grey",size=0.5)+
     geom_point(data=centers_n, aes(x=V_1, y=V_2), color="red",size=0.2, alpha=0.8)+
