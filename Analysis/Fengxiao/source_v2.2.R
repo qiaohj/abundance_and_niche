@@ -1,9 +1,9 @@
 
 library(raster)
 library(ggplot2)
-
+setwd("/Volumes/Disk2/Experiments/abundance_and_niche/abundance_and_niche/Analysis/Fengxiao")
 # load functions: dispersal_ability_exp,generateBG 
-source("code/2020_10_27_myfunctions.R")
+source("2020_10_27_myfunctions.R")
 
 #generateBG(res=11,type="gradientSimple",toRatio=1)
 #generateBG(res=11,type="gradientSimple",toRatio=2)
@@ -318,6 +318,7 @@ print(EXP_disp)
 
 flag_rerun = FALSE
 if (flag_rerun){
+  a = 1
   for( a in EXP_disp){
     # for uniform env-gradient
     results0 <- runExp(max_dispersal_ability=a,
