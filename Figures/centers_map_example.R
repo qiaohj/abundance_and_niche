@@ -166,17 +166,20 @@ for (index in c(1:2)){
   
 }
 if (F){
-  p_g_item[[1]]
+  p_g_item[[1]]<-p_g_item[[1]]+coord_fixed()
   p_g_item[[2]]
   p_n_item[[1]]
   p_n_item[[2]]
 }
-parr_1<-ggarrange(p_g_item[[1]], p_n_item[[1]], nrow=1, ncol=2)
-parr_2<-ggarrange(p_g_item[[2]], p_n_item[[2]], nrow=1, ncol=2)
+p_g_item[[1]]<-p_g_item[[1]]+coord_fixed()
+p_g_item[[2]]<-p_g_item[[2]]+coord_fixed()
+
+parr_1<-ggarrange(p_g_item[[1]], p_n_item[[1]], nrow=1, ncol=2, widths=c(0.8, 1))
+parr_2<-ggarrange(p_g_item[[2]], p_n_item[[2]], nrow=1, ncol=2, widths=c(0.8, 1))
 parr_g_2<-ggarrange(parr_1, parr_2, nrow=2, ncol=1)
 #p<-p+xlim(-7.5e6, -2.5e6)+
 #  ylim(-6e6, -2e4)
-parr_g_full<-ggarrange(p, parr_g_2, nrow=2, ncol=1, heights=c(10, 12))
+parr_g_full<-ggarrange(p, parr_g_2, nrow=2, ncol=1, heights=c(8, 12))
 if (F){
   ggsave(parr_g_full, file="../Figures/center_map_example/center_map_example.png", 
          width=8, height=8)

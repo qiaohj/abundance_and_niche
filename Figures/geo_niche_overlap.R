@@ -42,17 +42,18 @@ p
 ggsave(p2, filename="../Figures/overlap/overlap.combined.png", width=7, height=5)
 ggsave(p2, filename="../Figures/overlap/overlap.combined.pdf", width=7, height=5)
 
+range(df_box$centers_g_2_centers_n_mean, na.rm = T)
 p_x<-ggplot(df_box)+
   geom_histogram(aes(x=centers_g_2_centers_n_mean, fill=factor(width)), bins=50)+
-  geom_vline(xintercept=sqrt(stats::qchisq(0.95, 2)), linetype=2)+
-  geom_vline(xintercept=sqrt(stats::qchisq(0.01, 2)), linetype=2)+
-  labs(fill="width", x="Mahalanobis distance of spatial center to niche center in environmental space", y="Count")+
+  geom_vline(xintercept=stats::qchisq(0.95, 2), linetype=2)+
+  geom_vline(xintercept=stats::qchisq(0.01, 2), linetype=2)+
+  labs(fill="width", x="Mean Mahalanobis distance of spatial center to niche center in environmental space", y="Count")+
   scale_x_sqrt(breaks=seq(0, 6, 1)^2)+
   theme_bw()
 
 p_x_facet<-ggplot(df_box)+
   geom_histogram(aes(x=centers_g_2_centers_n_mean, fill=factor(width)), bins=50)+
-  labs(fill="width", x="Mahalanobis distance of spatial center to niche center in environmental space", y="Count")+
+  labs(fill="width", x="Mean Mahalanobis distance of spatial center to niche center in environmental space", y="Count")+
   scale_x_sqrt(breaks=seq(0, 6, 1)^2)+
   theme_bw()+
   facet_wrap(~width)
@@ -100,8 +101,8 @@ ggsave(pp, filename="../Figures/overlap/histgram.combined.pdf", width=7, height=
 
 pp<-ggarrange( p_y, p_y2, p_x, p2, nrow=2, ncol=2, 
                common.legend = T, legend = "right", legend.grob = leg)
-ggsave(pp, filename="../Figures/overlap/histgram.combined_all.png", width=13, height=7)
-ggsave(pp, filename="../Figures/overlap/histgram.combined_all.pdf", width=13, height=7)
+ggsave(pp, filename="../Figures/overlap/histgram.combined_all.png", width=14, height=7)
+ggsave(pp, filename="../Figures/overlap/histgram.combined_all.pdf", width=14, height=7)
 
 
 df_box$cuts<-">10% and <50%"
