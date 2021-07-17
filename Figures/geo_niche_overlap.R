@@ -1,5 +1,27 @@
+library(raster)
+library(ggplot2)
+library(dplyr)
+library(MASS)
+library(ggpubr)
+library(ggpmisc)
+library(Rmisc)
+library(vegan)
+library(ggpmisc)
 
+setwd("/Volumes/Disk2/Experiments/abundance_and_niche/abundance_and_niche")
 ##continue with centers_map_example.R
+
+df_box<-readRDS("../Tables/box_with_more_dist.rda")
+df_box<-df_box%>%dplyr::filter(land_percentile>=0.8)
+df_box<-df_box%>%dplyr::filter(df_box$semi_ra>10)
+df_box$xxx<-df_box$centers_n_in_centers_g/
+  (df_box$centers_n_in_centers_g+df_box$centers_n_out_centers_g)
+ratio = 400
+res = 1000
+filter_df_box_1<-df_box%>%dplyr::filter((semi_ra==ratio)&(xxx>=0.5)&(land_percentile==1))
+df_box$dist_ttt<-sqrt((df_box$x-filter_df_box_1[3, "x"])^2+
+                        (df_box$y-filter_df_box_1[3, "y"])^2)
+
 
 hist(df_box$centers_g_2_centers_n_mean)
 
@@ -184,8 +206,8 @@ lm_m1_2<-lm(data=df_box, n2g_scale ~ m_scale)
 summary(lm_m1_2)
 
 df_box$g2n_scale<-df_box$centers_g_2_centers_n_mean/(df_box$width*sqrt(2))
-#df_box$g2n_scale<-scale(df_box$centers_g_2_centers_n_mean)
-lm_m2<-lm(data=df_box, centers_g_2_centers_n_mean ~ m_scale+width_scale)
+df_box$g2n_scale<-scale(df_box$centers_g_2_centers_n_mean)
+lm_m2<-lm(data=df_box, g2n_scale ~ m_scale+width_scale)
 summary(lm_m2)
 
 cor(df_box$width, df_box$M_V1_ovserved)
@@ -206,9 +228,10 @@ library("plot3D")
 
 png(filename="../Figures/overlap/lm_n2g.png", width=1000, height=1000)
 
-scatter3D(df_box$m_scale, 
-          df_box$width_scale,
-          df_box$centers_g_2_centers_n_mean, pch = 18, cex = 0.5, 
+item<-df_box[which(df_box$g2n_scale<=5),]
+scatter3D(item$m_scale, 
+          item$width_scale,
+          item$g2n_scale, pch = 18, cex = 0.5, 
           theta = 60, phi = 20, ticktype = "detailed",
           xlab = "scaled Moran’s I of PC1", ylab = "scaled width", zlab = "Center E to Center G",
           surf = list(x = m_scale.pred, y = width_scale.pred, z = dist.pred,  
