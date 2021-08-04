@@ -34,11 +34,14 @@ df_box$yyy<-df_box$centers_g_in_centers_n/
 p<-ggplot(df_box)+geom_density(aes(x=xxx, color=factor(semi_ra)))+theme_bw()+
   xlab("")+facet_wrap(~semi_ra)
 binwidth<-0.1
+cbPalette_width <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#800026", "#CC79A7")
 p1<-ggplot(df_box)+
   geom_histogram(aes(x=xxx, fill=factor(width)), bins=20)+
   geom_density(aes(x=xxx, y = ..density..* nrow(df_box) * binwidth, 
                    color=factor(width)), bw = binwidth) +  
   scale_x_sqrt(breaks=seq(0, 0.9, 0.1)^2)+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   theme_bw()+
   ylab("Count")+
   xlab("Overlap of spatial space center and environmental centroid (square root transform)")+
@@ -52,6 +55,8 @@ p2<-ggplot(df_box)+
                    color=factor(width)), bw = binwidth) +  
   #scale_x_sqrt(breaks=seq(0, 0.9, 0.1)^2)+
   scale_x_continuous(breaks=seq(0, 0.9, 0.1), labels = paste(seq(0, 0.9, 0.1)*100, "%"))+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   ylab("Count")+
   theme_bw()+
   xlab("Overlap of spatial space center and environmental centroid")+
@@ -69,6 +74,8 @@ p_x<-ggplot(df_box)+
   geom_histogram(aes(x=centers_g_2_centers_n_mean, fill=factor(width)), bins=50)+
   geom_vline(xintercept=stats::qchisq(0.95, 2), linetype=2)+
   geom_vline(xintercept=stats::qchisq(0.01, 2), linetype=2)+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   labs(fill="width", x="Mean Mahalanobis distance of spatial center to niche center in environmental space", y="Count")+
   scale_x_sqrt(breaks=seq(0, 6, 1)^2)+
   theme_bw()
@@ -78,6 +85,8 @@ p_x_facet<-ggplot(df_box)+
   labs(fill="width", x="Mean Mahalanobis distance of spatial center to niche center in environmental space", y="Count")+
   scale_x_sqrt(breaks=seq(0, 6, 1)^2)+
   theme_bw()+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   facet_wrap(~width)
 p_x_facet
 ggsave(p_x_facet, filename="../Figures/overlap/distance_in_n_facet.png", width=10, height=7)
@@ -87,12 +96,16 @@ p_y<-ggplot(df_box)+
   geom_histogram(aes(x=centers_n_2_centers_g_mean/1000, fill=factor(width)), bins=50)+
   labs(fill="width", x="Mean Euclidean distance of spatial center to niche center in spatial space (KM)", y="Count")+
   scale_x_sqrt(breaks=seq(0, 25, 5)^2)+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   theme_bw()
 p_y
 p_y_facet<-ggplot(df_box)+
   geom_histogram(aes(x=centers_n_2_centers_g_mean/1000, fill=factor(width)), bins=50)+
   labs(fill="width", x="Mean Euclidean distance of spatial center to niche center in spatial space (KM)", y="Count")+
   scale_x_sqrt(breaks=seq(0, 25, 5)^2)+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   theme_bw()+
   facet_wrap(~width)
 p_y_facet
@@ -101,12 +114,16 @@ ggsave(p_y_facet, filename="../Figures/overlap/distance_in_g_facet.png", width=1
 df_box$n2g_scale<-as.vector(df_box$centers_n_2_centers_g_mean/(df_box$width*sqrt(2))/1000)
 p_y2<-ggplot(df_box)+
   geom_histogram(aes(x=n2g_scale, fill=factor(width)), bins=50)+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   labs(fill="width", 
        x="scaled mean Euclidean distance of spatial center to niche center in spatial space", y="Count")+
   #scale_x_sqrt(breaks=seq(0, 25, 5)^2)+
   theme_bw()
 p_y2_facet<-ggplot(df_box)+
   geom_histogram(aes(x=n2g_scale, fill=factor(width)), bins=50)+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   labs(fill="width", 
        x="scaled mean Euclidean distance of spatial center to niche center in spatial space", y="Count")+
   #scale_x_sqrt(breaks=seq(0, 25, 5)^2)+
@@ -165,6 +182,8 @@ p3<-ggplot(df_box)+
                                  sep = "~~~")),
                formula = y ~ x, 
                parse = TRUE)+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   xlim(c(0, 25))+
   xlab("Mean Mahalanobis distance of spatial center to niche center in environmental space")+
   ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
@@ -300,7 +319,8 @@ p4<-ggplot(df_box)+
                                  sep = "~~~")),
                formula = y ~ x, 
                parse = TRUE)+
-  
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   xlab("Moran's I autocorrelation index of PC1")+
   ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
   labs(color = "width")+
@@ -325,7 +345,8 @@ p5<-ggplot(df_box)+
                                  sep = "~~~")),
                formula = y ~ x, 
                parse = TRUE)+
-  
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   xlab("Moran's I autocorrelation index of PC2")+
   ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
   labs(color = "width")+
@@ -352,6 +373,8 @@ p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
                                  sep = "~~~")),
                formula = y ~ x, 
                parse = TRUE)+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   xlab("Standard deviation of elevation")+
   ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
   labs(color = "width")+
@@ -367,6 +390,8 @@ p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
                   y=centers_n_2_centers_g_mean/1000,
                   color=factor(width)),
               method="lm")+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   xlab("Standard deviation of elevation")+
   ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
   labs(color = "width")+
@@ -389,6 +414,8 @@ p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
                                  sep = "~~~")),
                formula = y ~ x, 
                parse = TRUE)+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   xlab("Standard deviation of elevation")+
   ylab("Mean Euclidean distance of spatial center to niche center in spatial space (KM)")+
   labs(color = "width")+
@@ -415,6 +442,8 @@ p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
                                  sep = "~~~")),
                formula = y ~ x, 
                parse = TRUE)+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   ylim(c(0, 25))+
   labs(color = "width")+
   theme_bw()
@@ -439,6 +468,8 @@ p3<-ggplot(df_box%>%dplyr::filter(df_box$centers_g_2_centers_n_mean<25))+
                                  sep = "~~~")),
                formula = y ~ x, 
                parse = TRUE)+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   xlab("Radius (km)")+
   ylab("Jaccard similarity")+
   theme_bw()
@@ -456,6 +487,8 @@ p3<-ggplot(df_box_se)+
                     y=mean_jaccard,
                     ymin=mean_jaccard-CI_jaccard,
                     ymax=mean_jaccard+CI_jaccard))+
+  scale_fill_viridis(discrete=T)+
+  scale_color_viridis(discrete=T)+
   xlab("Radius (km)")+
   ylab("Mean Jaccard similarity")+
   theme_bw()

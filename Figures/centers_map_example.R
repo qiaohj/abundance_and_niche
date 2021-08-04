@@ -7,6 +7,7 @@ library(ggpmisc)
 library(Rmisc)
 library(vegan)
 library(ggpmisc)
+library(viridis)
 
 setwd("/Volumes/Disk2/Experiments/abundance_and_niche/abundance_and_niche")
 #center points
@@ -69,22 +70,23 @@ lines1<-data.frame(x=c(center1$x-ratio*res, center1$x+ratio*res, center1$x+ratio
 center2<-filter_df_box[2,]
 lines2<-data.frame(x=c(center2$x-ratio*res, center2$x+ratio*res, center2$x+ratio*res, center2$x-ratio*res, center2$x-ratio*res),
                    y=c(center2$y-ratio*res, center2$y-ratio*res, center2$y+ratio*res, center2$y+ratio*res, center2$y-ratio*res))
-
+terrain.colors<-c("#ccece6", "#99d8c9", "#66c2a4", "#fdbb84", "#fc8d59", "#ef6548", "#d7301f")
 p<-ggplot()+geom_tile(data=p_mask, aes(x=x, y=y, fill=v), alpha=0.8)+
-  geom_point(data=p_sub, aes(x=x, y=y), color="darkred", size=0.3, shape=4)+
-  scale_fill_gradientn(colours = rev(terrain.colors(10)))+
+  geom_point(data=p_sub, aes(x=x, y=y), color="#000000", size=0.3, shape=4)+
+  scale_fill_gradientn(colours = terrain.colors)+
+  #scale_fill_viridis()+
   map_theme
 p
 
 
-p<-p+geom_path(data=lines1, aes(x=x, y=y), color="black")+
+p<-p+geom_path(data=lines1, aes(x=x, y=y), color="#000000")+
   geom_point(data=center1, aes(x=x, y=y), size=0.5)+
-  geom_text(data=center1, aes(x=x, y=y, label="(1)"), color="black", vjust=2.5)
+  geom_text(data=center1, aes(x=x, y=y, label="(1)"), color="#000000", vjust=2.5)
 
 
-p<-p+geom_path(data=lines2, aes(x=x, y=y), color="black")+
+p<-p+geom_path(data=lines2, aes(x=x, y=y), color="#000000")+
   geom_point(data=center2, aes(x=x, y=y), size=0.5)+
-  geom_text(data=center2, aes(x=x, y=y, label="(2)"), color="black", vjust=2.5)
+  geom_text(data=center2, aes(x=x, y=y, label="(2)"), color="#000000", vjust=2.5)
 
 p
 if (F){
@@ -107,6 +109,8 @@ p_g_item<-list()
 p_n_item<-list()
 index=1
 source("commonFuns/addEllipse.R")
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#800026", "#CC79A7")
+
 for (index in c(1:2)){
   center<-filter_df_box[index,]
   points<-expand.grid(x=seq(from=center$x - ratio*res, to=center$x + ratio * res, by=res),
@@ -148,19 +152,20 @@ for (index in c(1:2)){
                     y=c(center$y-ratio*res, center$y-ratio*res, center$y+ratio*res, center$y+ratio*res, center$y-ratio*res))
   
   p1<-ggplot()+geom_tile(data=points_no_NA, aes(x=x, y=y, fill=alt), alpha=0.8)+
-    scale_fill_gradientn(colours = rev(terrain.colors(10)))+
+    scale_fill_gradientn(colours = terrain.colors)+
     geom_path(data=lines, aes(x=x, y=y), color="black")+
-    geom_tile(data=centers_n, aes(x=x, y=y), fill="red",size=0.2)+
-    geom_tile(data=centers_g, aes(x=x, y=y), fill="grey",size=0.5, alpha=0.8)+
+    geom_tile(data=centers_n, aes(x=x, y=y), fill="#800026",size=0.2)+
+    geom_tile(data=centers_g, aes(x=x, y=y), fill="#999999",size=0.5, alpha=0.8)+
+    #scale_fill_viridis()+
     map_theme
   p_g_item[[index]]<-p1
-  lines<-data.frame(addEllipse(mve$center, mve$cov, col="red", p.interval=0.95))
+  lines<-data.frame(addEllipse(mve$center, mve$cov, col="#800026", p.interval=0.95))
   p2<-ggplot()+
     geom_point(data=points_no_NA[sample(nrow(points_no_NA), 1000), ], 
                aes(x=V_1, y=V_2), color="black", alpha=0.4, size=0.3)+
-    geom_path(data=lines, aes(x=X1, y=X2), color="red")+
-    geom_point(data=centers_g, aes(x=V_1, y=V_2), color="grey",size=0.5)+
-    geom_point(data=centers_n, aes(x=V_1, y=V_2), color="red",size=0.2, alpha=0.8)+
+    geom_path(data=lines, aes(x=X1, y=X2), color="#800026")+
+    geom_point(data=centers_g, aes(x=V_1, y=V_2), color="#999999",size=0.5)+
+    geom_point(data=centers_n, aes(x=V_1, y=V_2), color="#800026",size=0.2, alpha=0.8)+
     theme_bw()+xlab("PC 1")+ylab("PC 2")
   p_n_item[[index]]<-p2
   
