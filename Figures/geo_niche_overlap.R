@@ -7,13 +7,15 @@ library(ggpmisc)
 library(Rmisc)
 library(vegan)
 library(ggpmisc)
-
-setwd("/Volumes/Disk2/Experiments/abundance_and_niche/abundance_and_niche")
+library(viridis)
+library(plot3D)
+setwd("/media/huijieqiao/WD12T/Experiments/abundance_and_niche/abundance_and_niche")
 ##continue with centers_map_example.R
 
 df_box<-readRDS("../Tables/box_with_more_dist.rda")
 df_box<-df_box%>%dplyr::filter(land_percentile>=0.8)
 df_box<-df_box%>%dplyr::filter(df_box$semi_ra>10)
+write.csv(df_box, "../Exports/Figure6/niche_centres_and_geographic_centres.csv")
 df_box$xxx<-df_box$centers_n_in_centers_g/
   (df_box$centers_n_in_centers_g+df_box$centers_n_out_centers_g)
 ratio = 400
@@ -217,6 +219,10 @@ df_box$n2g_scale<-as.vector(df_box$centers_n_2_centers_g_mean/(df_box$width*sqrt
 #df_box$n2g_scale<-scale(df_box$centers_n_2_centers_g_mean)
 df_box$m_scale<-as.vector(base::scale(df_box$M_V1_ovserved, center=T, scale=T))
 df_box$width_scale<-as.vector(scale(df_box$width))
+mean(df_box$m_scale)
+sd(df_box$m_scale)
+mean(df_box$width_scale)
+sd(df_box$width_scale)
 
 lm_m1<-lm(data=df_box, n2g_scale ~ m_scale+width_scale)
 summary(lm_m1)
@@ -226,22 +232,41 @@ summary(lm_m1_2)
 
 df_box$g2n_scale<-df_box$centers_g_2_centers_n_mean/(df_box$width*sqrt(2))
 df_box$g2n_scale<-scale(df_box$centers_g_2_centers_n_mean)
-lm_m2<-lm(data=df_box, g2n_scale ~ m_scale+width_scale)
+hist(df_box$g2n_scale)
+mean(df_box$g2n_scale, na.rm=T)
+sd(df_box$g2n_scale, na.rm=T)
+dim(df_box[which(is.na(df_box$g2n_scale)),])
+dim(df_box)
+lm_m2<-lm(data=df_box[which(!is.na(df_box$g2n_scale)),], g2n_scale ~ m_scale+width_scale)
 summary(lm_m2)
 
 cor(df_box$width, df_box$M_V1_ovserved)
 info<-lm_eqn(lm_m2)
 grid.lines = 30
+
 m_scale.pred <- seq(min(df_box$m_scale), 
                           max(df_box$m_scale), 
                           length.out = grid.lines)
+hist(df_box$m_scale)
+hist(df_box$g2n_scale, breaks=100)
+
+hist(m_scale.pred)
+
 width_scale.pred <- seq(min(df_box$width_scale), 
                   max(df_box$width_scale), 
                   length.out = grid.lines)
+
+hist(df_box$width_scale)
+
+hist(width_scale.pred)
+
+
 xy <- expand.grid(m_scale = m_scale.pred, 
                   width_scale = width_scale.pred)
 dist.pred <- matrix(predict(lm_m2, newdata = xy), 
                     nrow = grid.lines, ncol = grid.lines)
+
+hist(dist.pred)
 
 library("plot3D")
 
@@ -252,7 +277,7 @@ scatter3D(item$m_scale,
           item$width_scale,
           item$g2n_scale, pch = 18, cex = 0.5, 
           theta = 60, phi = 20, ticktype = "detailed",
-          xlab = "scaled Moran’s I of PC1", ylab = "scaled width", zlab = "Center E to Center G",
+          xlab = "scaled Moran’s I of PC1", ylab = "scaled width", zlab = "Center G to Center E in E space",
           surf = list(x = m_scale.pred, y = width_scale.pred, z = dist.pred,  
                       facets = NA), 
           main = sprintf("Intercept=%.3f, a=%.3f, b=%.3f, r2=%.3f, p-value=%.3f",
@@ -262,6 +287,12 @@ scatter3D(item$m_scale,
                          info$r,
                          info$p))
 
+library(rgl)
+plot3d(item$m_scale, 
+       item$width_scale,
+       item$g2n_scale,
+       rgl.printRglwidget = TRUE)
+rglwidget()
 dev.off()
 
 #df_box_1<-df_box%>%dplyr::filter(centers_g_2_centers_n_mean<=qchisq)

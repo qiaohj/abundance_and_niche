@@ -8,7 +8,7 @@ library(Rmisc)
 library(vegan)
 library(ggpmisc)
 
-setwd("/Volumes/Disk2/Experiments/abundance_and_niche/abundance_and_niche")
+setwd("/media/huijieqiao/WD12T/Experiments/abundance_and_niche/abundance_and_niche")
 #center points
 p_sub<-readRDS("../Tables/random_points_1000_0.8.rda")
 if (F){
